@@ -1064,7 +1064,7 @@ void CTxMemPool::RemoveForBlock(
                     {
                         childrenOfToRemoveGroupMembers.insert(child);
                     }
-                    else if(!found->IsInPrimaryMempool() && !child->IsInPrimaryMempool())
+                    else if(!child->IsInPrimaryMempool())
                     {
                         childrenOfToRemoveSecondaryMempool.insert(child);
                     }
