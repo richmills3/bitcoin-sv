@@ -3490,6 +3490,14 @@ private:
             //       with non-whitelisted confiscation transaction is mined.
         }
 
+        // Start caching inputs
+        auto cacheInputsFuture = std::async(std::launch::async,
+            [this]()
+            {
+                view.CacheInputs(block.vtx);
+            }
+        );
+
         // Setup for parallel txn validation if required
         size_t maxThreads { parallelTxnValidation? static_cast<size_t>(config.GetPerBlockTxnValidatorThreadsCount()) : 1UL };
         uint64_t batchSize { config.GetBlockValidationTxBatchSize() };
@@ -3519,11 +3527,11 @@ private:
         // Make space for all but the coinbase
         blockundo.vtxundo.resize(block.vtx.size() - 1);
 
-        // Cache all inputs
+        // Wait for input caching to finish
         int64_t startCacheTime { GetTimeMicros() };
-        view.CacheInputs(block.vtx);
+        cacheInputsFuture.wait();
         int64_t cacheTime { GetTimeMicros() - startCacheTime };
-        LogPrint(BCLog::BENCH, "        - Cache: %.2fms\n", 0.001 * cacheTime);
+        LogPrint(BCLog::BENCH, "        - Cache Wait: %.2fms\n", 0.001 * cacheTime);
 
         // Validate
         int64_t validateStartTime { GetTimeMicros() };
